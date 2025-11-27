@@ -205,6 +205,7 @@ export const getSettings = (): AppSettings => {
         fontFamily: 'Playfair Display',
         backgroundImage: 'bg-1', 
         startWeekDay: 1,
+        animationMode: 'SLIDE',
         // New System Reminders Defaults
         enableSystemReminders: true,
         notifyMoon: true,
