@@ -55,6 +55,8 @@ export interface UserEvent {
   uid: string;
 }
 
+export type AnimationMode = 'SLIDE' | 'FADE' | 'ZOOM' | 'FLIP' | 'CARDS';
+
 export interface AppSettings {
   userName: string;
   birthDate: string; 
@@ -63,6 +65,7 @@ export interface AppSettings {
   fontFamily: string;
   backgroundImage: string; // URL or preset ID
   startWeekDay: number; // 0 for Sunday, 1 for Monday
+  animationMode: AnimationMode; // New Animation Setting
   
   // System Reminders
   enableSystemReminders: boolean;

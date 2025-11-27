@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
   <head>
@@ -90,34 +91,42 @@
         border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
-      /* Calendar Transitions */
+      /* Base Transition Settings for Smoothness */
       .calendar-transition {
-        transition: transform 0.25s ease-in-out, opacity 0.25s ease-in-out;
-      }
-      
-      /* Old month sliding OUT to Left */
-      .slide-out-left {
-        transform: translateX(-50px);
-        opacity: 0;
-      }
-      /* Old month sliding OUT to Right */
-      .slide-out-right {
-        transform: translateX(50px);
-        opacity: 0;
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        backface-visibility: hidden;
       }
 
-      /* New month preparing to enter from Right */
-      .slide-hidden-right {
-        transform: translateX(50px);
-        opacity: 0;
-        transition: none !important; /* Instant jump */
-      }
-      /* New month preparing to enter from Left */
-      .slide-hidden-left {
-        transform: translateX(-50px);
-        opacity: 0;
-        transition: none !important; /* Instant jump */
-      }
+      /* ================= ANIMATION MODES ================= */
+
+      /* 1. SLIDE (Trượt) */
+      .SLIDE-out-next { transform: translateX(-50%); opacity: 0; }
+      .SLIDE-out-prev { transform: translateX(50%); opacity: 0; }
+      .SLIDE-in-next-start { transform: translateX(50%); opacity: 0; transition: none !important; }
+      .SLIDE-in-prev-start { transform: translateX(-50%); opacity: 0; transition: none !important; }
+
+      /* 2. FADE (Mờ dần) */
+      .FADE-out-next, .FADE-out-prev { opacity: 0; transform: scale(0.98); }
+      .FADE-in-next-start, .FADE-in-prev-start { opacity: 0; transform: scale(1.02); transition: none !important; }
+
+      /* 3. ZOOM (Phóng to) */
+      .ZOOM-out-next, .ZOOM-out-prev { opacity: 0; transform: scale(0.5); }
+      .ZOOM-in-next-start, .ZOOM-in-prev-start { opacity: 0; transform: scale(1.5); transition: none !important; }
+
+      /* 4. FLIP (Lật 3D) */
+      /* Parent needs perspective */
+      .perspective-container { perspective: 1000px; }
+      .FLIP-out-next { opacity: 0; transform: rotateY(-90deg); }
+      .FLIP-out-prev { opacity: 0; transform: rotateY(90deg); }
+      .FLIP-in-next-start { opacity: 0; transform: rotateY(90deg); transition: none !important; }
+      .FLIP-in-prev-start { opacity: 0; transform: rotateY(-90deg); transition: none !important; }
+
+      /* 5. CARDS (Xếp thẻ) */
+      .CARDS-out-next { opacity: 0; transform: translateY(-50px) scale(0.9); }
+      .CARDS-out-prev { opacity: 0; transform: translateY(50px) scale(0.9); }
+      .CARDS-in-next-start { opacity: 0; transform: translateY(50px) scale(1.1); transition: none !important; }
+      .CARDS-in-prev-start { opacity: 0; transform: translateY(-50px) scale(1.1); transition: none !important; }
+
     </style>
     <!-- Import Map is kept for local playground compatibility, but package.json handles deps for Vercel -->
     <script type="importmap">
