@@ -2,7 +2,7 @@
 <html lang="vi">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover" />
     <meta name="theme-color" content="#B91C1C" />
     <title>Vạn Niên Lịch</title>
     <link rel="manifest" href="/manifest.json" />
@@ -42,6 +42,17 @@
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       
+      /* Safe Area Utilities for iOS PWA */
+      .pb-safe {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      .pt-safe {
+        padding-top: env(safe-area-inset-top);
+      }
+      .h-safe {
+        height: calc(100% + env(safe-area-inset-top));
+      }
+
       /* Custom Scrollbar */
       .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
@@ -94,8 +105,8 @@
 </script>
   <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-stone-200 dark:bg-black text-stone-900 dark:text-stone-100 h-full overflow-hidden select-none font-sans">
-    <div id="root" class="h-full flex flex-col items-center justify-center"></div>
+  <body class="bg-stone-200 dark:bg-black text-stone-900 dark:text-stone-100 h-full overflow-hidden select-none font-sans fixed inset-0 w-full">
+    <div id="root" class="h-full w-full flex flex-col items-center justify-center"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

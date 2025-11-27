@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { DailyView } from './components/DailyView';
 import { MonthlyView } from './components/MonthlyView';
@@ -175,13 +174,13 @@ const App: React.FC = () => {
 
   return (
     <div 
-        className={`h-full w-full sm:max-w-[420px] shadow-2xl relative flex flex-col overflow-hidden sm:rounded-[32px] sm:h-[90vh] sm:border-8 sm:border-stone-800 transition-colors duration-300 bg-cover bg-center`}
+        className={`w-full shadow-2xl relative flex flex-col overflow-hidden sm:rounded-[32px] sm:border-8 sm:border-stone-800 transition-colors duration-300 bg-cover bg-center h-[100dvh] sm:h-[90vh] sm:max-w-[420px]`}
         style={{ backgroundImage: `url(${bgUrl})` }}
     >
        {/* Glass Overlay for whole app legibility */}
        <div className="absolute inset-0 bg-white/60 dark:bg-black/60 backdrop-blur-[2px] z-0"></div>
        
-       <div className="h-1 w-full bg-transparent absolute top-0 left-0 z-50"></div>
+       <div className="h-1 w-full bg-transparent absolute top-0 left-0 z-50 pt-safe"></div>
 
        <div className="flex-1 overflow-hidden relative z-10">
           {renderContent()}
