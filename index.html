@@ -89,6 +89,35 @@
         background: rgba(30, 30, 30, 0.6);
         border: 1px solid rgba(255, 255, 255, 0.1);
       }
+
+      /* Calendar Transitions */
+      .calendar-transition {
+        transition: transform 0.25s ease-in-out, opacity 0.25s ease-in-out;
+      }
+      
+      /* Old month sliding OUT to Left */
+      .slide-out-left {
+        transform: translateX(-50px);
+        opacity: 0;
+      }
+      /* Old month sliding OUT to Right */
+      .slide-out-right {
+        transform: translateX(50px);
+        opacity: 0;
+      }
+
+      /* New month preparing to enter from Right */
+      .slide-hidden-right {
+        transform: translateX(50px);
+        opacity: 0;
+        transition: none !important; /* Instant jump */
+      }
+      /* New month preparing to enter from Left */
+      .slide-hidden-left {
+        transform: translateX(-50px);
+        opacity: 0;
+        transition: none !important; /* Instant jump */
+      }
     </style>
     <!-- Import Map is kept for local playground compatibility, but package.json handles deps for Vercel -->
     <script type="importmap">
