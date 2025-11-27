@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { convertSolarToLunar, getVietnamDate, getHolidays, convertLunarToSolar } from '../services/lunar';
 import { getEvents, getSettings, hasReminderOnDate } from '../services/storage';
 import { DailyView } from './DailyView';
-import { UserEvent, Holiday } from '../types';
+import { UserEvent, Holiday, AnimationMode } from '../types';
 import { ChevronLeft, ChevronRight } from './Icons';
 import { EventDetailModal } from './EventDetailModal';
 
@@ -17,6 +18,7 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
   const [events, setEvents] = useState<UserEvent[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [startWeekDay, setStartWeekDay] = useState(1); 
+  const [animMode, setAnimMode] = useState<AnimationMode>('SLIDE');
   
   // Animation State
   const [animClass, setAnimClass] = useState('');
@@ -41,6 +43,7 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
     getEvents().then(setEvents);
     const settings = getSettings();
     setStartWeekDay(settings.startWeekDay !== undefined ? settings.startWeekDay : 1);
+    setAnimMode(settings.animationMode || 'SLIDE');
   }, []);
 
   useEffect(() => {
@@ -60,9 +63,12 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
   const changeMonth = (delta: number) => {
       if (isAnimating) return;
       
+      const dir = delta > 0 ? 'next' : 'prev';
+      
       // 1. Slide Out Old
       setIsAnimating(true);
-      setAnimClass(delta > 0 ? 'slide-out-left' : 'slide-out-right');
+      // CSS Class: e.g., SLIDE-out-next
+      setAnimClass(`${animMode}-out-${dir}`);
 
       setTimeout(() => {
           // 2. Update Data
@@ -70,14 +76,15 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
           setViewDate(newDate);
 
           // 3. Prep New (Instant Move to start position)
-          setAnimClass(delta > 0 ? 'slide-hidden-right' : 'slide-hidden-left');
+          // CSS Class: e.g., SLIDE-in-next-start
+          setAnimClass(`${animMode}-in-${dir}-start`);
 
           // 4. Slide In New (Next Tick)
           setTimeout(() => {
               setAnimClass('');
               setIsAnimating(false);
-          }, 20);
-      }, 250); // Wait for CSS transition time
+          }, 20); // Small delay to allow browser to render the "start" position
+      }, 300); // Wait for transition duration (should match CSS)
   };
 
   const handlePickerSubmit = () => {
@@ -177,7 +184,7 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
   allEventsInMonth.sort((a,b) => a.day - b.day);
 
   return (
-    <div className="h-full flex flex-col bg-transparent">
+    <div className="h-full flex flex-col bg-transparent perspective-container">
       {/* Header with Navigation */}
       <div className="shrink-0 pt-4 pb-2 px-4 glass-panel border-b-0 rounded-b-3xl z-20 mx-2 mt-2">
          <div className="flex justify-between items-center mb-4">

@@ -1,5 +1,6 @@
+
 import React, { useEffect, useState, useRef } from 'react';
-import { AppSettings, Reminder } from '../types';
+import { AppSettings, Reminder, AnimationMode } from '../types';
 import { getSettings, saveSettings, getEvents } from '../services/storage';
 import { convertSolarToLunar } from '../services/lunar';
 import { PlusIcon } from './Icons';
@@ -25,6 +26,14 @@ const COLORS = [
     { name: 'Kim (Xám)', value: '#57534e' },
     { name: 'Thủy (Xanh)', value: '#0369a1' },
     { name: 'Mộc (Lá)', value: '#15803d' },
+];
+
+const ANIMATIONS: { name: string, value: AnimationMode }[] = [
+    { name: 'Trượt ngang (Slide)', value: 'SLIDE' },
+    { name: 'Mờ dần (Fade)', value: 'FADE' },
+    { name: 'Thu phóng (Zoom)', value: 'ZOOM' },
+    { name: 'Lật trang (Flip)', value: 'FLIP' },
+    { name: 'Xếp thẻ (Cards)', value: 'CARDS' },
 ];
 
 const WALLPAPERS = [
@@ -148,7 +157,7 @@ export const Settings: React.FC<SettingsProps> = ({ onSettingsChange }) => {
             <h2 className="text-3xl font-bold text-[var(--theme-color)] mb-6 drop-shadow-sm">Cài Đặt</h2>
 
             <div className="space-y-6">
-                {/* Personal Info */}
+                {/* 1. THÔNG TIN CÁ NHÂN */}
                 <div className="glass-panel p-5 rounded-2xl">
                     <h3 className="text-xs font-bold text-stone-500 uppercase mb-4 tracking-wider">Thông tin cá nhân</h3>
                     <div className="space-y-4">
@@ -179,7 +188,7 @@ export const Settings: React.FC<SettingsProps> = ({ onSettingsChange }) => {
                     </div>
                 </div>
 
-                {/* Appearance */}
+                {/* 2. GIAO DIỆN */}
                 <div className="glass-panel p-5 rounded-2xl">
                     <h3 className="text-xs font-bold text-stone-500 uppercase mb-4 tracking-wider">Giao diện</h3>
                     
@@ -222,6 +231,20 @@ export const Settings: React.FC<SettingsProps> = ({ onSettingsChange }) => {
                          </select>
                     </div>
 
+                    {/* Animation Mode */}
+                    <div className="mb-6">
+                         <label className="block text-sm font-medium mb-2 text-stone-800 dark:text-white">Hiệu ứng chuyển tháng</label>
+                         <select 
+                            value={settings.animationMode || 'SLIDE'}
+                            onChange={(e) => handleChange('animationMode', e.target.value)}
+                            className="w-full bg-white/50 dark:bg-black/30 border border-white/20 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[var(--theme-color)] text-stone-800 dark:text-white"
+                         >
+                             {ANIMATIONS.map(anim => (
+                                 <option key={anim.value} value={anim.value}>{anim.name}</option>
+                             ))}
+                         </select>
+                    </div>
+
                     {/* Custom Color */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium mb-3 text-stone-800 dark:text-white">Màu chủ đạo</label>
@@ -260,9 +283,7 @@ export const Settings: React.FC<SettingsProps> = ({ onSettingsChange }) => {
                     </div>
                 </div>
 
-                
-
-                {/* System Reminders */}
+                {/* 3. NHẮC NHỞ HỆ THỐNG */}
                 <div className="glass-panel p-5 rounded-2xl">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xs font-bold text-stone-500 uppercase tracking-wider">Nhắc nhở Hệ thống</h3>
@@ -330,22 +351,22 @@ export const Settings: React.FC<SettingsProps> = ({ onSettingsChange }) => {
                     )}
                 </div>
 
-                {/* Backup & Restore */}
+                {/* 4. DỮ LIỆU */}
                 <div className="glass-panel p-5 rounded-2xl">
                     <h3 className="text-xs font-bold text-stone-500 uppercase mb-4 tracking-wider">Dữ liệu</h3>
                     <p className="text-xs text-stone-500 mb-4 italic">Sao lưu dữ liệu để tránh bị mất khi đổi thiết bị hoặc xóa cache trình duyệt.</p>
                     <div className="flex gap-3">
                         <button 
                             onClick={handleBackup}
-                            className="flex-1 py-3 bg-green-700 dark:bg-stone-700 hover:bg-green-800 text-white rounded-xl font-bold text-stone-700 dark:text-stone-200 transition"
+                            className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition shadow-sm"
                         >
-                            Sao Lưu
+                            Sao Lưu (Xanh)
                         </button>
                         <button 
                             onClick={handleRestoreClick}
-                            className="flex-1 py-3 bg-[var(--theme-color)] text-white rounded-xl font-bold hover:opacity-90 transition"
+                            className="flex-1 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition shadow-sm"
                         >
-                            Phục Hồi
+                            Phục Hồi (Tím)
                         </button>
                         <input 
                             type="file" 
@@ -357,7 +378,6 @@ export const Settings: React.FC<SettingsProps> = ({ onSettingsChange }) => {
                     </div>
                 </div>
 
-                
             </div>
 
             {/* Wallpaper Modal */}
