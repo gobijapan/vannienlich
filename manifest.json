@@ -8,12 +8,12 @@
   "description": "Ứng dụng Lịch Vạn Niên Việt Nam, xem ngày tốt xấu, quản lý sự kiện.",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3652/3652191.png",
+      "src": "/calendar.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3652/3652191.png",
+      "src": "/calendar.png",
       "sizes": "512x512",
       "type": "image/png"
     }
