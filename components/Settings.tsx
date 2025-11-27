@@ -360,13 +360,13 @@ export const Settings: React.FC<SettingsProps> = ({ onSettingsChange }) => {
                             onClick={handleBackup}
                             className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition shadow-sm"
                         >
-                            Sao Lưu (Xanh)
+                            Sao Lưu
                         </button>
                         <button 
                             onClick={handleRestoreClick}
                             className="flex-1 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-bold transition shadow-sm"
                         >
-                            Phục Hồi (Tím)
+                            Phục Hồi
                         </button>
                         <input 
                             type="file" 
