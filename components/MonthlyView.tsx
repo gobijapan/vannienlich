@@ -19,6 +19,11 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [startWeekDay, setStartWeekDay] = useState(1); 
   
+  // Swipe State
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const minSwipeDistance = 50; // Khoảng cách tối thiểu để nhận diện là vuốt
+
   // Event Detail Modal
   const [selectedEvent, setSelectedEvent] = useState<UserEvent | null>(null);
 
@@ -64,6 +69,33 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
         if (e.type === 'SOLAR') return e.day === d && e.month === m;
         return e.day === ld && e.month === lm;
       });
+  };
+
+  // --- Swipe Handlers ---
+  const onTouchStart = (e: React.TouchEvent) => {
+      setTouchEnd(null);
+      setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+      setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+      if (!touchStart || !touchEnd) return;
+      
+      const distance = touchStart - touchEnd;
+      const isLeftSwipe = distance > minSwipeDistance;
+      const isRightSwipe = distance < -minSwipeDistance;
+
+      if (isLeftSwipe) {
+          // Vuốt sang trái -> Xem tháng sau (Next)
+          changeMonth(1);
+      }
+      if (isRightSwipe) {
+          // Vuốt sang phải -> Xem tháng trước (Prev)
+          changeMonth(-1);
+      }
   };
 
   if (detailDate) {
@@ -147,7 +179,12 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
 
       {/* Calendar Grid */}
       <div className="flex-1 overflow-y-auto no-scrollbar pb-24 px-2 pt-2">
-         <div className="glass-panel rounded-lg p-2 mb-4 overflow-hidden shadow-sm">
+         <div 
+            className="glass-panel rounded-lg p-2 mb-4 overflow-hidden shadow-sm touch-pan-y"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+         >
              {/* Header Grid */}
              <div className="grid grid-cols-7 border-b border-stone-300 dark:border-stone-600 mb-0">
                 {sortedWeekDays.map((d, i) => (
@@ -158,7 +195,7 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
              </div>
 
              {/* Days Grid */}
-             <div className="grid grid-cols-7 border-l border-t border-stone-300 dark:border-stone-600">
+             <div className="grid grid-cols-7 border-l border-t border-stone-300 dark:border-stone-600 select-none">
                  {emptyDays.map((_, i) => (
                      <div key={`e-${i}`} className="h-20 border-b border-r border-stone-300 dark:border-stone-600 bg-stone-100/30 dark:bg-black/20"></div>
                  ))}
