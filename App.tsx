@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { DailyView } from './components/DailyView';
 import { MonthlyView } from './components/MonthlyView';
 import { EventList } from './components/EventList';
@@ -25,6 +26,9 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewMode>(ViewMode.DAILY);
   const [selectedDate, setSelectedDate] = useState<Date>(getVietnamDate());
   const [settings, setSettings] = useState<AppSettings>(getSettings());
+  
+  // Dùng Set để lưu các thông báo đã bắn trong ngày/giờ/phút đó để tránh bắn trùng lặp
+  const notifiedCache = useRef<Set<string>>(new Set());
 
   const handleDateSelect = (date: Date) => {
       setSelectedDate(date);
@@ -46,7 +50,7 @@ const App: React.FC = () => {
     document.body.style.setProperty('font-family', `"${settings.fontFamily}", sans-serif`, 'important');
   }, [settings]);
 
-  // Check Reminders (Simulation every minute) - OPTIMIZED FOR CURRENT YEAR
+  // Check Reminders (OPTIMIZED: Check every 5 seconds)
   useEffect(() => {
     const checkReminders = async () => {
         if (Notification.permission !== 'granted') return;
@@ -55,7 +59,12 @@ const App: React.FC = () => {
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth() + 1;
         const currentDay = now.getDate();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
         
+        // Key đại diện cho phút hiện tại
+        const timeKey = `${currentYear}-${currentMonth}-${currentDay} ${currentHour}:${currentMinute}`;
+
         // 1. Check User Created Events
         const events = await getEvents();
         events.forEach(ev => {
@@ -85,11 +94,20 @@ const App: React.FC = () => {
                     triggerDate.getFullYear() === currentYear) {
                     
                     const [targetH, targetM] = (r.time || "07:00").split(':').map(Number);
-                    if (now.getHours() === targetH && now.getMinutes() === targetM) {
-                         new Notification(`Nhắc nhở: ${ev.title}`, {
-                             body: r.daysBefore && r.daysBefore > 0 ? `Sự kiện sẽ diễn ra trong ${r.daysBefore} ngày nữa.` : `Sự kiện diễn ra hôm nay!`,
-                             icon: '/icon.png'
-                         });
+                    
+                    // Kiểm tra giờ phút chính xác
+                    if (currentHour === targetH && currentMinute === targetM) {
+                         const notifyKey = `${ev.id}-${r.type}-${timeKey}`;
+                         
+                         // Nếu chưa bắn thông báo này trong phút này thì bắn
+                         if (!notifiedCache.current.has(notifyKey)) {
+                             new Notification(`Nhắc nhở: ${ev.title}`, {
+                                 body: r.daysBefore && r.daysBefore > 0 ? `Sự kiện sẽ diễn ra trong ${r.daysBefore} ngày nữa.` : `Sự kiện diễn ra hôm nay!`,
+                                 icon: '/icon.png',
+                                 tag: notifyKey // Prevent system duplicates on Android
+                             });
+                             notifiedCache.current.add(notifyKey);
+                         }
                     }
                 }
             });
@@ -99,20 +117,23 @@ const App: React.FC = () => {
         const currentSettings = getSettings();
         if (currentSettings.enableSystemReminders && currentSettings.systemReminders) {
             
-            // Function to trigger system notification
-            const triggerSystemNotify = (title: string, daysBefore: number) => {
-                 new Notification(title, {
-                     body: daysBefore > 0 ? `Sắp đến ngày này trong ${daysBefore} ngày nữa.` : `Hôm nay là ngày đặc biệt!`,
-                     icon: '/icon.png'
-                 });
+            const triggerSystemNotify = (id: string, title: string, daysBefore: number) => {
+                 const notifyKey = `SYS-${id}-${timeKey}`;
+                 if (!notifiedCache.current.has(notifyKey)) {
+                     new Notification(title, {
+                         body: daysBefore > 0 ? `Sắp đến ngày này trong ${daysBefore} ngày nữa.` : `Hôm nay là ngày đặc biệt!`,
+                         icon: '/icon.png',
+                         tag: notifyKey
+                     });
+                     notifiedCache.current.add(notifyKey);
+                 }
             };
 
-            currentSettings.systemReminders.forEach(r => {
+            currentSettings.systemReminders.forEach((r, idx) => {
                 if (!r.enabled) return;
                 const daysOffset = r.daysBefore || 0;
                 
-                // Calculate "Target Date" based on "Trigger Date (Now)"
-                // i.e., What date are we reminding ABOUT? -> Today + daysOffset
+                // Target Date = Today + daysOffset
                 const targetDateToCheck = new Date(now);
                 targetDateToCheck.setDate(targetDateToCheck.getDate() + daysOffset);
 
@@ -120,24 +141,25 @@ const App: React.FC = () => {
                 const tMonth = targetDateToCheck.getMonth() + 1;
                 const tYear = targetDateToCheck.getFullYear();
                 
-                // Check if target date is a Holiday/Moon day
-                
+                // Check time match
+                const [targetH, targetM] = (r.time || "07:00").split(':').map(Number);
+                if (currentHour !== targetH || currentMinute !== targetM) return;
+
                 // A. Check Lunar (Moon days & Holidays)
                 if (currentSettings.notifyMoon || currentSettings.notifyLunarHolidays) {
                     const lunar = convertSolarToLunar(tDay, tMonth, tYear);
                     
                     // Rằm / Mùng 1
                     if (currentSettings.notifyMoon) {
-                        if (lunar.day === 1) triggerSystemNotify(daysOffset === 0 ? "Hôm nay là Mùng 1 Âm lịch" : "Sắp đến Mùng 1 Âm lịch", daysOffset);
-                        if (lunar.day === 15) triggerSystemNotify(daysOffset === 0 ? "Hôm nay là Rằm" : "Sắp đến ngày Rằm", daysOffset);
+                        if (lunar.day === 1) triggerSystemNotify(`M1-${idx}`, daysOffset === 0 ? "Hôm nay là Mùng 1 Âm lịch" : "Sắp đến Mùng 1 Âm lịch", daysOffset);
+                        if (lunar.day === 15) triggerSystemNotify(`R15-${idx}`, daysOffset === 0 ? "Hôm nay là Rằm" : "Sắp đến ngày Rằm", daysOffset);
                     }
 
                     // Lunar Holidays
                     if (currentSettings.notifyLunarHolidays) {
                         const hols = getHolidays(tMonth, tYear);
-                        // Filter for Lunar only holidays on this specific day
                         const lunarHols = hols.filter(h => h.type === 'LUNAR' && h.day === tDay);
-                        lunarHols.forEach(h => triggerSystemNotify(`Lễ: ${h.name}`, daysOffset));
+                        lunarHols.forEach((h, hIdx) => triggerSystemNotify(`LH-${hIdx}-${idx}`, `Lễ: ${h.name}`, daysOffset));
                     }
                 }
 
@@ -145,14 +167,24 @@ const App: React.FC = () => {
                 if (currentSettings.notifySolarHolidays) {
                     const hols = getHolidays(tMonth, tYear);
                     const solarHols = hols.filter(h => h.type === 'SOLAR' && h.day === tDay);
-                    solarHols.forEach(h => triggerSystemNotify(`Lễ: ${h.name}`, daysOffset));
+                    solarHols.forEach((h, hIdx) => triggerSystemNotify(`SH-${hIdx}-${idx}`, `Lễ: ${h.name}`, daysOffset));
                 }
             });
         }
     };
 
-    const interval = setInterval(checkReminders, 60000); // Check every minute
-    return () => clearInterval(interval);
+    // Kiểm tra mỗi 5 giây thay vì 60 giây để tránh bị trôi phút do trình duyệt ngủ
+    const interval = setInterval(checkReminders, 5000); 
+    
+    // Clear old cache keys every hour to prevent memory leak (optional but good practice)
+    const cleanupInterval = setInterval(() => {
+        notifiedCache.current.clear();
+    }, 3600000);
+
+    return () => {
+        clearInterval(interval);
+        clearInterval(cleanupInterval);
+    };
   }, []);
 
   const renderContent = () => {
