@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { convertSolarToLunar, getVietnamDate, getHolidays, convertLunarToSolar } from '../services/lunar';
 import { getEvents, getSettings, hasReminderOnDate } from '../services/storage';
@@ -19,10 +18,14 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
   const [showPicker, setShowPicker] = useState(false);
   const [startWeekDay, setStartWeekDay] = useState(1); 
   
+  // Animation State
+  const [animClass, setAnimClass] = useState('');
+  const [isAnimating, setIsAnimating] = useState(false);
+  
   // Swipe State
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
-  const minSwipeDistance = 50; // Khoảng cách tối thiểu để nhận diện là vuốt
+  const minSwipeDistance = 50; 
 
   // Event Detail Modal
   const [selectedEvent, setSelectedEvent] = useState<UserEvent | null>(null);
@@ -55,8 +58,26 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
   }, [showPicker]);
 
   const changeMonth = (delta: number) => {
-      const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + delta, 1);
-      setViewDate(newDate);
+      if (isAnimating) return;
+      
+      // 1. Slide Out Old
+      setIsAnimating(true);
+      setAnimClass(delta > 0 ? 'slide-out-left' : 'slide-out-right');
+
+      setTimeout(() => {
+          // 2. Update Data
+          const newDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + delta, 1);
+          setViewDate(newDate);
+
+          // 3. Prep New (Instant Move to start position)
+          setAnimClass(delta > 0 ? 'slide-hidden-right' : 'slide-hidden-left');
+
+          // 4. Slide In New (Next Tick)
+          setTimeout(() => {
+              setAnimClass('');
+              setIsAnimating(false);
+          }, 20);
+      }, 250); // Wait for CSS transition time
   };
 
   const handlePickerSubmit = () => {
@@ -89,11 +110,11 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
       const isRightSwipe = distance < -minSwipeDistance;
 
       if (isLeftSwipe) {
-          // Vuốt sang trái -> Xem tháng sau (Next)
+          // Swipe Left -> Next Month
           changeMonth(1);
       }
       if (isRightSwipe) {
-          // Vuốt sang phải -> Xem tháng trước (Prev)
+          // Swipe Right -> Prev Month
           changeMonth(-1);
       }
   };
@@ -180,7 +201,7 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
       {/* Calendar Grid */}
       <div className="flex-1 overflow-y-auto no-scrollbar pb-24 px-2 pt-2">
          <div 
-            className="glass-panel rounded-lg p-2 mb-4 overflow-hidden shadow-sm touch-pan-y"
+            className={`glass-panel rounded-lg p-2 mb-4 overflow-hidden shadow-sm touch-pan-y calendar-transition ${animClass}`}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
@@ -208,7 +229,6 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
                      const hasHoliday = monthlyHolidays.some(h => h.day === d);
                      const isWeekend = new Date(viewDate.getFullYear(), viewDate.getMonth(), d).getDay() === 0;
                      
-                     // Check for reminder on this day
                      const gridDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
                      const hasReminder = hasReminderOnDate(gridDate, events);
 
@@ -245,7 +265,7 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
          </div>
 
          {/* Events List */}
-         <div className="space-y-3 pb-8 px-2">
+         <div className={`space-y-3 pb-8 px-2 calendar-transition ${animClass}`}>
              <h3 className="text-xs font-bold uppercase text-stone-500 dark:text-stone-400 pl-2">Sự kiện trong tháng</h3>
              {allEventsInMonth.length === 0 ? (
                  <div className="text-center text-xs text-stone-400 italic py-4">Không có sự kiện nào</div>
@@ -323,7 +343,7 @@ export const MonthlyView: React.FC<MonthlyViewProps> = ({ currentDate }) => {
           </div>
       )}
 
-      {/* Event Detail Modal (Replaced inline) */}
+      {/* Event Detail Modal */}
       {selectedEvent && (
           <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
       )}
